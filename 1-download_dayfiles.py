@@ -38,7 +38,7 @@ homedir = "path/to/output/data/directory/" # "./"
 is_removeresp = 1 # Remove response?
 is_overwrite = 0 # overwrite ? 
 
-input_stalist = 1 # 0 if use all stations
+input_stalist = 0 # 0 if use all stations
 if input_stalist: # List of stations
     stalist = 'path/to/local/station/file/stations.txt'
     text_file = open(stalist, "r")
@@ -62,6 +62,14 @@ t2 = UTCDateTime(tend)
 inventory = client.get_stations(network=network, station=stations,channel=comps[0], starttime=t1, endtime=t2)
 print(inventory)
 inventory.plot(projection="local",label=False)
+
+file = open('stations.txt', 'w')
+for ista in range(0,len(inventory[0])) :
+    file.write("%5s %12f %12f %12f\n" % (inventory[0].stations[ista]._code, 
+                                        inventory[0].stations[ista]._latitude, 
+                                        inventory[0].stations[ista]._longitude, 
+                                        inventory[0].stations[ista]._elevation))
+file.close()
 
 # %% codecell
 # DOWNLOAD DATA
