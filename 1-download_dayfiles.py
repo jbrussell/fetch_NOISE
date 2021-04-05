@@ -108,7 +108,7 @@ for ista in range(0,len(inventory[0])) :
                 sr = st[0].stats.sampling_rate
                 if is_removeresp:
                     try:
-                        st.remove_response(output="DISP", zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=60)
+                        st.remove_response(output="DISP", zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=200)
                     except Exception:
                         print('Failed to remove response: '+daystr)
                         continue
