@@ -37,6 +37,7 @@ comps = ['BHZ'] #["HXZ", "HX1", "HX2"] #["LHZ", "LH1", "LH2"] #["HHZ", "HH1", "H
 homedir = "path/to/output/data/directory/" # "./"
 is_removeresp = 1 # Remove response?
 is_overwrite = 0 # overwrite ? 
+outunits = 'DISP' # DISP, VEL, ACC [For pressure channels, should use "VEL"]
 
 input_stalist = 0 # 0 if use all stations
 if input_stalist: # List of stations
@@ -106,13 +107,14 @@ for ista in range(0,len(inventory[0])) :
                         print('Missing data for day: '+daystr)
                         continue
                 sr = st[0].stats.sampling_rate
-                if is_removeresp:
-                    try:
-                        st.remove_response(output="DISP", zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=200)
-                    except Exception:
-                        print('Failed to remove response: '+daystr)
-                        continue
                 st.merge(method=1, fill_value=0) # fill all datagaps with 0
+                if is_removeresp:
+                    # Check whether pressure channel, if so use "VEL" option which doesn't add or remove zeros
+                    if st[0].stats.response.instrument_sensitivity.input_units == 'PA':
+                        st.remove_response(output='VEL', zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=200)
+                    else:
+                        st.remove_response(output=outunits, zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=200)
+
                 st.trim(starttime=tdbeg, endtime=tdend, pad=True, nearest_sample=False, fill_value=0) # make sure correct length
                 st.detrend(type='demean')
                 st.detrend(type='linear')
