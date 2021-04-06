@@ -36,8 +36,8 @@ trlen = 24*60*60 # s
 comps = ['BHZ'] #["HXZ", "HX1", "HX2"] #["LHZ", "LH1", "LH2"] #["HHZ", "HH1", "HH2"] #["HHZ", "HH1", "HH2", "BDH"]
 homedir = "path/to/output/data/directory/" # "./"
 is_removeresp = 1 # Remove response?
-is_overwrite = 0 # overwrite ? 
 outunits = 'DISP' # DISP, VEL, ACC [For pressure channels, should use "VEL"]
+is_overwrite = 0 # overwrite ? 
 
 input_stalist = 0 # 0 if use all stations
 if input_stalist: # List of stations
