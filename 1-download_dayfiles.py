@@ -91,56 +91,56 @@ for ista in range(0,len(inventory[0])) :
         daystr = DAY.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         print('Working on ' + station + ' : ' + daystr)
     
-            tdbeg = UTCDateTime(DAY.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
-            tdend = UTCDateTime((DAY+pd.Timedelta(seconds=trlen)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
-            
-            for ch in comps :
-                checkfile = stadir + '/' + station+'.'+tdbeg.datetime.strftime('%Y.%j.%H.%M.%S.')+ch+'.sac'
-                if is_overwrite==0 and os.path.exists(checkfile):
-                    print('Already processed '+checkfile)
+        tdbeg = UTCDateTime(DAY.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+        tdend = UTCDateTime((DAY+pd.Timedelta(seconds=trlen)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+        
+        for ch in comps :
+            checkfile = stadir + '/' + station+'.'+tdbeg.datetime.strftime('%Y.%j.%H.%M.%S.')+ch+'.sac'
+            if is_overwrite==0 and os.path.exists(checkfile):
+                print('Already processed '+checkfile)
+                continue
+                
+            # Download data and process
+            try:
+                st = client.get_waveforms(network=network, station=station, location="*", channel=ch, starttime=tdbeg, endtime=tdend, attach_response=True)
+            except Exception:
+                    print('Missing data for day: '+daystr)
                     continue
-                    
-                # Download data and process
-                try:
-                    st = client.get_waveforms(network=network, station=station, location="*", channel=ch, starttime=tdbeg, endtime=tdend, attach_response=True)
-                except Exception:
-                        print('Missing data for day: '+daystr)
-                        continue
-                sr = st[0].stats.sampling_rate
-                st.merge(method=1, fill_value=0) # fill all datagaps with 0
-                if is_removeresp:
-                    # Check whether pressure channel, if so use "VEL" option which doesn't add or remove zeros
-                    if st[0].stats.response.instrument_sensitivity.input_units == 'PA':
-                        st.remove_response(output='VEL', zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
-                    else:
-                        st.remove_response(output=outunits, zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
+            sr = st[0].stats.sampling_rate
+            st.merge(method=1, fill_value=0) # fill all datagaps with 0
+            if is_removeresp:
+                # Check whether pressure channel, if so use "VEL" option which doesn't add or remove zeros
+                if st[0].stats.response.instrument_sensitivity.input_units == 'PA':
+                    st.remove_response(output='VEL', zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
+                else:
+                    st.remove_response(output=outunits, zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
 
-                st.trim(starttime=tdbeg, endtime=tdend, pad=True, nearest_sample=False, fill_value=0) # make sure correct length
+            st.trim(starttime=tdbeg, endtime=tdend, pad=True, nearest_sample=False, fill_value=0) # make sure correct length
+            st.detrend(type='demean')
+            st.detrend(type='linear')
+            st.taper(type="cosine",max_percentage=0.05)
+            if is_downsamp and sr!=sr_new:
+                st.filter('lowpass', freq=0.4*sr_new, zerophase=True) # anti-alias filter
+                st.filter('highpass', freq=1/60/60, zerophase=True) # Remove daily oscillations
+                st.decimate(factor=int(sr/sr_new), no_filter=True) # downsample
                 st.detrend(type='demean')
                 st.detrend(type='linear')
                 st.taper(type="cosine",max_percentage=0.05)
-                if is_downsamp and sr!=sr_new:
-                    st.filter('lowpass', freq=0.4*sr_new, zerophase=True) # anti-alias filter
-                    st.filter('highpass', freq=1/60/60, zerophase=True) # Remove daily oscillations
-                    st.decimate(factor=int(sr/sr_new), no_filter=True) # downsample
-                    st.detrend(type='demean')
-                    st.detrend(type='linear')
-                    st.taper(type="cosine",max_percentage=0.05)
-                
-                # convert to SAC and fill out station/event header info
-                for tr in st:
-                    sac = SACTrace.from_obspy_trace(tr)
-                    sac.stel = inventory[0].stations[ista].elevation
-                    sac.stla = inventory[0].stations[ista].latitude
-                    sac.stlo = inventory[0].stations[ista].longitude
-                    kcmpnm = sac.kcmpnm
-                    yr = str(st[0].stats.starttime.year)
-                    jday = '%03i'%(st[0].stats.starttime.julday)
-                    hr = '%02i'%(st[0].stats.starttime.hour)
-                    mn = '%02i'%(st[0].stats.starttime.minute)
-                    sec = '%02i'%(st[0].stats.starttime.second)
-                    sac_out = stadir + '/' + station+'.'+yr+'.'+jday+'.'+hr+'.'+mn+'.'+sec+'.'+kcmpnm+'.sac'
-                    sac.write(sac_out)
+            
+            # convert to SAC and fill out station/event header info
+            for tr in st:
+                sac = SACTrace.from_obspy_trace(tr)
+                sac.stel = inventory[0].stations[ista].elevation
+                sac.stla = inventory[0].stations[ista].latitude
+                sac.stlo = inventory[0].stations[ista].longitude
+                kcmpnm = sac.kcmpnm
+                yr = str(st[0].stats.starttime.year)
+                jday = '%03i'%(st[0].stats.starttime.julday)
+                hr = '%02i'%(st[0].stats.starttime.hour)
+                mn = '%02i'%(st[0].stats.starttime.minute)
+                sec = '%02i'%(st[0].stats.starttime.second)
+                sac_out = stadir + '/' + station+'.'+yr+'.'+jday+'.'+hr+'.'+mn+'.'+sec+'.'+kcmpnm+'.sac'
+                sac.write(sac_out)
         
         
 
