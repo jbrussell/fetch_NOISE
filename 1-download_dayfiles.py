@@ -23,7 +23,7 @@ import numpy as np
 import matplotlib.pylab as plt
 import os
 import pandas as pd
-%matplotlib inline
+# %matplotlib inline
 
 # %% codecell
 webservice = "IRIS"
