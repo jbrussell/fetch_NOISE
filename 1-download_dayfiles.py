@@ -33,6 +33,7 @@ tend = "2015-03-29T00:00:00"
 is_downsamp = 1 # downsample data?
 sr_new = 1 # Hz New sample rate
 trlen = 24*60*60 # s
+# WARNING! List the full channel names. Do not use wildcards. Bad things will happen...
 comps = ['BHZ'] #["HXZ", "HX1", "HX2"] #["LHZ", "LH1", "LH2"] #["HHZ", "HH1", "HH2"] #["HHZ", "HH1", "HH2", "BDH"]
 homedir = "path/to/output/data/directory/" # "./"
 is_removeresp = 1 # Remove response?
