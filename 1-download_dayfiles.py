@@ -79,7 +79,7 @@ for inet in range(0,len(inventory)):
     datadir = homedir + network + '/'
     if not os.path.exists(datadir):
         os.makedirs(datadir)
-        
+
     # Loop through stations
     for ista in range(0,len(inventory[inet])) :
         station = inventory[inet].stations[ista].code
@@ -87,6 +87,8 @@ for inet in range(0,len(inventory)):
         # Build vector of start times
         start_date = inventory[inet].stations[ista].start_date
         end_date = inventory[inet].stations[ista].end_date
+        if not end_date: # no end date
+            end_date = UTCDateTime(pd.Timestamp('today'))
         dayvec = pd.date_range(start=start_date.datetime, end=end_date.datetime, freq=str(trlen)+'S')
         
         print('======== Working on STA : ' + station + "========")
