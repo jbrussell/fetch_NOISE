@@ -63,11 +63,12 @@ print(inventory)
 inventory.plot(projection="local",label=False)
 
 file = open('stations.txt', 'w')
-for ista in range(0,len(inventory[0])) :
-    file.write("%5s %12f %12f %12f\n" % (inventory[0].stations[ista]._code, 
-                                        inventory[0].stations[ista]._latitude, 
-                                        inventory[0].stations[ista]._longitude, 
-                                        inventory[0].stations[ista]._elevation))
+for inet in range(0,len(inventory)):
+    for ista in range(0,len(inventory[inet])) :
+        file.write("%5s %12f %12f %12f\n" % (inventory[inet].stations[ista]._code, 
+                                            inventory[inet].stations[ista]._latitude, 
+                                            inventory[inet].stations[ista]._longitude, 
+                                            inventory[inet].stations[ista]._elevation))
 file.close()
 
 # %% codecell
