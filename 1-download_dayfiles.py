@@ -114,7 +114,7 @@ for inet in range(0,len(inventory)):
                 # Download data and process
                 try:
                     st = client.get_waveforms(network=network, station=station, location="*", channel=ch, starttime=tdbeg, endtime=tdend, attach_response=True)
-                except Exception:
+                except:
                         print('Missing data for day: '+daystr)
                         continue
                 sr = st[0].stats.sampling_rate
@@ -126,7 +126,7 @@ for inet in range(0,len(inventory)):
                             st.remove_response(output='VEL', zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
                         else:
                             st.remove_response(output=outunits, zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
-                    except Exception:
+                    except:
                         print('Skipping... issue reading response: '+daystr+' '+ch)
                         continue
 
