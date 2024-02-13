@@ -1,4 +1,7 @@
 # %% markdown
+#
+# This version of the code downloads all data within a box defined by [minlatitude, maxlatitude, minlongitude, maxlongitude] for a desired time window and includes all networks.
+#
 # # Download data for ambient noise
 # ### Download day-long files for use with ambient noise codes.
 # 
@@ -27,15 +30,19 @@ import pandas as pd
 
 # %% codecell
 webservice = "IRIS"
-network = "YO" # YO ENAM; ZA NoMelt
-tstart = "2014-04-13T00:00:00"
-tend = "2015-03-29T00:00:00"
+networks = ""; #"YO" # YO ENAM; ZA NoMelt
+tstart = "1999-01-01T00:00:00"
+tend = "2100-01-01T00:00:00"
+minlatitude = 41.8
+maxlatitude = 47
+minlongitude = -114.2
+maxlongitude = -106
 is_downsamp = 1 # downsample data?
 sr_new = 1 # Hz New sample rate
 trlen = 24*60*60 # s
 # WARNING! List the full channel names. Do not use wildcards. Bad things will happen...
-comps = ['BHZ','BH1','BH2','BDH'] #["HXZ", "HX1", "HX2"] #["LHZ", "LH1", "LH2"] #["HHZ", "HH1", "HH2"] #["HHZ", "HH1", "HH2", "BDH"]
-homedir = "path/to/output/data/directory/" # "./"
+comps = ['BHZ'] #['BHZ','BH1','BH2','BDH'] #["HXZ", "HX1", "HX2"] #["LHZ", "LH1", "LH2"] #["HHZ", "HH1", "HH2"] #["HHZ", "HH1", "HH2", "BDH"]
+homedir = "./OUT/" # "./"
 is_removeresp = 1 # Remove response?
 outunits = 'DISP' # DISP, VEL, ACC [For pressure channels, should use "VEL"]
 is_overwrite = 0 # overwrite ? 
@@ -58,9 +65,18 @@ t1 = UTCDateTime(tstart)
 t2 = UTCDateTime(tend)
 
 # STATIONS
-inventory = client.get_stations(network=network, station=stations,channel=comps[0], starttime=t1, endtime=t2)
+inventory = client.get_stations(network='*', station=stations,channel=comps[0], starttime=t1, endtime=t2, minlatitude=minlatitude, maxlatitude=maxlatitude, minlongitude=minlongitude, maxlongitude=maxlongitude)
 print(inventory)
 inventory.plot(projection="local",label=False)
+
+file = open('stations_network.txt', 'w')
+for inet in range(0,len(inventory)):
+    for ista in range(0,len(inventory[inet])) :
+        file.write("%5s %5s %12f %12f %12f\n" % (inventory[inet].code, inventory[inet].stations[ista]._code, 
+                                            inventory[inet].stations[ista]._latitude, 
+                                            inventory[inet].stations[ista]._longitude, 
+                                            inventory[inet].stations[ista]._elevation))
+file.close()
 
 file = open('stations.txt', 'w')
 for inet in range(0,len(inventory)):
@@ -74,21 +90,20 @@ file.close()
 # %% codecell
 # DOWNLOAD DATA
 
-# Loop through networks
+# Loop through stations
 for inet in range(0,len(inventory)):
     network = inventory[inet].code
+
     datadir = homedir + network + '/'
     if not os.path.exists(datadir):
         os.makedirs(datadir)
-
-    # Loop through stations
     for ista in range(0,len(inventory[inet])) :
         station = inventory[inet].stations[ista].code
 
         # Build vector of start times
         start_date = inventory[inet].stations[ista].start_date
         end_date = inventory[inet].stations[ista].end_date
-        if not end_date: # no end date
+        if not end_date:
             end_date = UTCDateTime(pd.Timestamp('today'))
         dayvec = pd.date_range(start=start_date.datetime, end=end_date.datetime, freq=str(trlen)+'S')
         
@@ -114,11 +129,15 @@ for inet in range(0,len(inventory)):
                 # Download data and process
                 try:
                     st = client.get_waveforms(network=network, station=station, location="*", channel=ch, starttime=tdbeg, endtime=tdend, attach_response=True)
-                except:
-                        print('Missing data for day: '+daystr)
-                        continue
+                except Exception:
+                    print('Missing data for day: '+daystr)
+                    continue
                 sr = st[0].stats.sampling_rate
-                st.merge(method=1, fill_value=0) # fill all datagaps with 0
+                try:
+                    st.merge(method=1, fill_value=0) # fill all datagaps with 0
+                except Exception:
+                    print('Could not merge traces: '+daystr)
+                    continue
                 if is_removeresp:
                     try:
                         # Check whether pressure channel, if so use "VEL" option which doesn't add or remove zeros
@@ -126,7 +145,7 @@ for inet in range(0,len(inventory)):
                             st.remove_response(output='VEL', zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
                         else:
                             st.remove_response(output=outunits, zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=[0.001, 0.005, sr/3, sr/2], water_level=600)
-                    except:
+                    except Exception:
                         print('Skipping... issue reading response: '+daystr+' '+ch)
                         continue
 
