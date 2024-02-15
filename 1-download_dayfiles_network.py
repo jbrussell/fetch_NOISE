@@ -61,7 +61,7 @@ t1 = UTCDateTime(tstart)
 t2 = UTCDateTime(tend)
 
 # STATIONS
-inventory = client.get_stations(network=network, station=stations,channel=comps[0], starttime=t1, endtime=t2)
+inventory = client.get_stations(network=network, station=stations,channel=','.join(comps), starttime=t1, endtime=t2)
 print(inventory)
 inventory.plot(projection="local",label=False)
 

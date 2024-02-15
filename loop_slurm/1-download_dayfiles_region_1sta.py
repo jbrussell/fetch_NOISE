@@ -72,7 +72,7 @@ t1 = UTCDateTime(tstart)
 t2 = UTCDateTime(tend)
 
 # STATIONS
-inventory = client.get_stations(network=network, station=station,channel=comps[0], starttime=t1, endtime=t2, minlatitude=minlatitude, maxlatitude=maxlatitude, minlongitude=minlongitude, maxlongitude=maxlongitude)
+inventory = client.get_stations(network=network, station=station,channel=','.join(comps), starttime=t1, endtime=t2, minlatitude=minlatitude, maxlatitude=maxlatitude, minlongitude=minlongitude, maxlongitude=maxlongitude)
 print(inventory)
 #inventory.plot(projection="local",label=False)
 
