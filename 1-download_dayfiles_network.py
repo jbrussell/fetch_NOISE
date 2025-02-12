@@ -30,7 +30,7 @@ import pandas as pd
 
 # %% codecell
 webservice = "IRIS"
-network = "YO" # YO ENAM; ZA NoMelt
+networks = ['YO'] # YO ENAM; ZA NoMelt
 tstart = "2014-04-13T00:00:00"
 tend = "2015-03-29T00:00:00"
 is_downsamp = 1 # downsample data?
@@ -61,9 +61,18 @@ t1 = UTCDateTime(tstart)
 t2 = UTCDateTime(tend)
 
 # STATIONS
-inventory = client.get_stations(network=network, station=stations,channel=','.join(comps), starttime=t1, endtime=t2)
+inventory = client.get_stations(network=','.join(networks), station=stations,channel=','.join(comps), starttime=t1, endtime=t2)
 print(inventory)
 inventory.plot(projection="local",label=False)
+
+file = open('stations_network.txt', 'w')
+for inet in range(0,len(inventory)):
+    for ista in range(0,len(inventory[inet])) :
+        file.write("%5s %5s %12f %12f %12f\n" % (inventory[inet].code, inventory[inet].stations[ista]._code, 
+                                            inventory[inet].stations[ista]._latitude, 
+                                            inventory[inet].stations[ista]._longitude, 
+                                            inventory[inet].stations[ista]._elevation))
+file.close()
 
 file = open('stations.txt', 'w')
 for inet in range(0,len(inventory)):
