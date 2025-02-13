@@ -31,8 +31,8 @@ import pandas as pd
 # %% codecell
 webservice = "IRIS"
 networks = ['DK','XF'] # YO ENAM; ZA NoMelt
-tstart = "2014-01-01T00:00:00"
-tend = "2100-01-01T00:00:00"
+tstart = "2015-01-01T00:00:00"
+tend = "2015-06-01T00:00:00"
 minlatitude = 58.27
 maxlatitude = 83.86
 minlongitude = -75.83
@@ -105,7 +105,7 @@ for inet in range(0,len(inventory)):
         end_date = inventory[inet].stations[ista].end_date
         if not end_date:
             end_date = UTCDateTime(pd.Timestamp('today'))
-        dayvec = pd.date_range(start=start_date.datetime, end=end_date.datetime, freq=str(trlen)+'S')
+        dayvec = pd.date_range(start=tstart, end=tend, freq=str(trlen)+'S')
         
         print('======== Working on STA : ' + station + "========")
         stadir = datadir + station + '/'
