@@ -95,7 +95,8 @@ for inet in range(0,len(inventory)):
         end_date = inventory[inet].stations[ista].end_date
         if not end_date:
             end_date = UTCDateTime(pd.Timestamp('today'))
-        dayvec = pd.date_range(start=start_date.datetime, end=end_date.datetime, freq=str(trlen)+'S')
+        # dayvec = pd.date_range(start=start_date.datetime, end=end_date.datetime, freq=str(trlen)+'S')
+        dayvec = pd.date_range(start=tstart, end=tend, freq=str(trlen)+'S')
         
         print('======== Working on STA : ' + station + "========")
         stadir = datadir + station + '/'
